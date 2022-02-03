@@ -1,0 +1,22 @@
+{
+  "name": "parsable-template-handling",
+  "version": "0.0.1",
+  "description": "Template Handling for Parsable",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "parsable-templates-handle": "node index.js"
+  },
+  "bin": {
+    "parsable-templates-handle": "index.js"
+  },
+  "author": "Martin Jaycy Halum",
+  "license": "ISC",
+  "dependencies": {
+    "@wearableintelligence/parsable-cli": "^1.0.13",
+    "cli-ux": "^6.0.8",
+    "node-libcurl": "^2.3.3",
+    "prompts": "^2.4.2"
+  }
+}
