@@ -8,8 +8,8 @@ const {
   getLocationAttributes,
 } = require("./src/functions/auth");
 const {
-  queryJobs,
-  queryByDate,
+  // queryJobs,
+  // queryByDate,
   processData,
   queryJobTemplates
 } = require("./src/functions/templates");
@@ -17,29 +17,29 @@ const { version } = require("./package.json");
 
 const {
   auth_prompts,
-  filter_prompts,
+  // filter_prompts,
   process_prompts,
-  date_prompts,
-  keyword_prompts,
+  // date_prompts,
+  // keyword_prompts,
   team_prompts,
   location_prompts,
 } = constants;
 
-const toTimeStamp = (strDate) => {
-  const dt = Date.parse(strDate);
-  return dt / 1000;
-};
+// const toTimeStamp = (strDate) => {
+//   const dt = Date.parse(strDate);
+//   return dt / 1000;
+// };
 
 const handler = async () => {
   console.info("Handle Templates in Bulk For Parsable");
   console.info(`***** ver ${version} *****`);
-  const email = "martin.halum@parsable.com";
-  const password = "Tidus9908!";
+  // const email = "martin.halum@parsable.com";
+  // const password = "Tidus9908!";
   let locationData = [];
   let attributesData = [];
-  // const auth = await prompts(auth_prompts);
+  const auth = await prompts(auth_prompts);
 
-  // const { email, password } = auth;
+  const { email, password } = auth;
   const AUTH_TOKEN = await loginUser(email, password);
   const TEAM_DATA = await getTeamId(AUTH_TOKEN);
 
