@@ -21,12 +21,12 @@ const {
 const handler = async () => {
   console.info("Handle Templates in Bulk For Parsable");
   console.info(`***** ver ${version} *****`);
-  const email = "martin.halum@parsable.com";
-  const password = "Tidus9908!";
+  // const email = "martin.halum@parsable.com";
+  // const password = "Tidus9908!";
   let locationData = [];
   let attributesData = [];
-  // const auth = await prompts(auth_prompts);
-  // const { email, password } = auth;
+  const auth = await prompts(auth_prompts);
+  const { email, password } = auth;
 
   const AUTH_TOKEN = await loginUser(email, password);
   const TEAM_DATA = await getTeamId(AUTH_TOKEN);
