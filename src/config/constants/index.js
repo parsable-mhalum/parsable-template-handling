@@ -1,5 +1,16 @@
 #!/usr/bin/env node
 
+const file_headers = [
+  {
+    id: "id",
+    title: "ID",
+  },
+  {
+    id: "title",
+    title: "Title",
+  },
+];
+
 const auth_prompts = [
   {
     type: "text",
@@ -13,40 +24,6 @@ const auth_prompts = [
   },
 ];
 
-const filter_prompts = [
-  {
-    type: "select",
-    name: "filter",
-    message: "Filter by",
-    choices: [
-      {
-        title: "Date",
-        value: "date",
-      },
-      {
-        title: "Keyword",
-        value: "keyword",
-      },
-    ],
-  },
-  {
-    type: "toggle",
-    name: "includeOnDemand",
-    message: "Include On Demand Jobs?",
-    initial: false,
-    active: "yes",
-    inactive: "no",
-  },
-  {
-    type: "toggle",
-    name: "includeScheduled",
-    message: "Include Planned Jobs?",
-    initial: false,
-    active: "yes",
-    inactive: "no",
-  },
-];
-
 const process_prompts = [
   {
     type: "select",
@@ -57,46 +34,25 @@ const process_prompts = [
         title: "Update Attributes",
         value: "update",
       },
-      // {
-      //   title: "Start",
-      //   value: "start",
-      // },
-      // {
-      //   title: "Archive",
-      //   value: "archive",
-      // },
-      // {
-      //   title: "Complete",
-      //   value: "complete",
-      // },
+      {
+        title: "Extract Templates",
+        value: "extract",
+      },
     ],
   },
 ];
 
-const date_prompts = [
+const extract_type = [
   {
-    type: "date",
-    name: "filterDate",
-    message: "Pick a date",
-    initial: new Date(),
-    mask: "YYYY-MM-DD",
-    validate: (date) => (date > Date.now() ? "Not in the future" : true),
-  },
-  {
-    type: "toggle",
-    name: "locationFilter",
-    message: "Include Location?",
-    initial: false,
-    active: "yes",
-    inactive: "no",
-  },
-];
-
-const keyword_prompts = [
-  {
-    type: "text",
-    name: "keyword",
-    message: "Please enter the keyword you want to handle:",
+    type: "select",
+    name: "extractType",
+    message: "Please select extraction type",
+    choices: [
+      {
+        title: "Templates with no Attributes",
+        value: "no_attributes",
+      },
+    ],
   },
 ];
 
@@ -107,14 +63,14 @@ const team_prompts = (teamData) => {
     const { id, name } = value;
     teamChoices.push({
       title: name,
-      value: id,
+      value: { teamId: id, name },
     });
   });
 
   const team_prompt = [
     {
       type: "select",
-      name: "teamId",
+      name: "team",
       message: "Please select your Team:",
       choices: teamChoices,
     },
@@ -151,12 +107,10 @@ const location_prompts = (locationData) => {
 };
 
 module.exports = {
+  file_headers,
   auth_prompts,
-  filter_prompts,
   process_prompts,
-  date_prompts,
-  keyword_prompts,
+  extract_type,
   team_prompts,
   location_prompts,
 };
-8;

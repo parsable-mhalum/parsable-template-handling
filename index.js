@@ -7,51 +7,37 @@ const {
   getTeamId,
   getLocationAttributes,
 } = require("./src/functions/auth");
-const {
-  // queryJobs,
-  // queryByDate,
-  processData,
-  queryJobTemplates
-} = require("./src/functions/templates");
+const { processData, queryJobTemplates } = require("./src/functions/templates");
 const { version } = require("./package.json");
 
 const {
   auth_prompts,
-  // filter_prompts,
   process_prompts,
-  // date_prompts,
-  // keyword_prompts,
+  extract_type,
   team_prompts,
   location_prompts,
 } = constants;
 
-// const toTimeStamp = (strDate) => {
-//   const dt = Date.parse(strDate);
-//   return dt / 1000;
-// };
-
 const handler = async () => {
   console.info("Handle Templates in Bulk For Parsable");
   console.info(`***** ver ${version} *****`);
-  // const email = "martin.halum@parsable.com";
-  // const password = "Tidus9908!";
+  const email = "martin.halum@parsable.com";
+  const password = "Tidus9908!";
   let locationData = [];
   let attributesData = [];
-  const auth = await prompts(auth_prompts);
+  // const auth = await prompts(auth_prompts);
+  // const { email, password } = auth;
 
-  const { email, password } = auth;
   const AUTH_TOKEN = await loginUser(email, password);
   const TEAM_DATA = await getTeamId(AUTH_TOKEN);
-
-  const selected_process = await prompts(process_prompts);
   const selected_team = await prompts(team_prompts(TEAM_DATA));
-  // const selected_filter = await prompts(filter_prompts);
+  const selected_process = await prompts(process_prompts);
 
   const { process } = selected_process;
-  const { teamId } = selected_team;
+  const { team } = selected_team;
+  const { teamId, name } = team;
 
   const LOCATION_DATA = await getLocationAttributes(AUTH_TOKEN, teamId);
-
   const TEMPLATES_DATA = await queryJobTemplates(teamId);
 
   LOCATION_DATA.forEach((data) => {
@@ -61,20 +47,38 @@ const handler = async () => {
     locationData = values;
   });
 
-  const select_location = await prompts(location_prompts(locationData));
-  const { selectedLocation } = select_location;
+  const data = {
+    templateData: TEMPLATES_DATA,
+    subdomain: name,
+  };
 
-  attributesData = [
-    {
-      id: ATTRIBUTE_ID,
-      label: ATTRIBUTE_LABEL,
-      values: selectedLocation,
-    },
-  ];
+  switch (process) {
+    case "update":
+      const select_location = await prompts(location_prompts(locationData));
+      const { selectedLocation } = select_location;
 
-  // console.log(JSON.stringify(TEMPLATES_DATA));
+      attributesData = [
+        {
+          id: ATTRIBUTE_ID,
+          label: ATTRIBUTE_LABEL,
+          values: selectedLocation,
+        },
+      ];
 
-  processData(TEMPLATES_DATA, attributesData);
+      data["attributesData"] = attributesData;
+
+      processData(process, data);
+      break;
+    case "extract":
+      const select_type = await prompts(extract_type);
+      const { extractType } = select_type;
+
+      processData(`${process}_${extractType}`, data);
+      break;
+    default:
+      console.log("Others selected");
+      break;
+  }
 };
 
 exports.module = handler();

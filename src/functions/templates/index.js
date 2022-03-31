@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 const { cli } = require("cli-ux");
-const _ = require('lodash');
+const { get } = require("lodash");
 
 const { api } = require("../../config");
 const { APIFactory } = require("../../api");
+const file_process = require("../../file_process/write");
 
 const { JOBS_URL, HEADER, SELECT_OPTS } = api;
 
@@ -14,7 +15,7 @@ const selectOpts = SELECT_OPTS;
 const updateTemplate = async (templateId, attributesData) => {
   cli.action.start("Adding Attribute");
 
-  attributesData.forEach(async value => {
+  for (const value of attributesData) {
     const { id, values } = value;
 
     const apiData = JSON.stringify({
@@ -23,26 +24,23 @@ const updateTemplate = async (templateId, attributesData) => {
         templateId: templateId,
         attributeId: id,
         values: values,
-        behave: 1
-      }
+        behave: 1,
+      },
     });
 
-    await APIFactory.post(apiUrl, apiHeader, apiData)
-      .catch(err => {
-        console.log(err);
-        cli.action.stop();
-      });
-  })
-}
+    await APIFactory.post(apiUrl, apiHeader, apiData).catch((err) => {
+      console.log(err);
+      cli.action.stop();
+    });
+  }
+};
 
-const queryJobTemplates = async (
-  teamId,
-) => {
+const queryJobTemplates = async (teamId) => {
   cli.action.start("Querying Templates");
 
   const whereOpts = {
     teamId: teamId,
-    templateTypes: [0, 1]
+    templateTypes: [0, 1],
   };
 
   const apiData = JSON.stringify({
@@ -68,14 +66,38 @@ const queryJobTemplates = async (
   return templates;
 };
 
-const processData = async (templateData, attributesData) => {
-  cli.action.start("Processing Jobs");
+const processData = async (process, data) => {
+  cli.action.start("Processing Templates");
+  const { templateData, subdomain } = data;
+  let jobsExtract = [];
 
-  templateData.forEach(async (value) => {
+  for (const value of templateData) {
     const { id } = value;
+    const checkAttributes = get(value, "attributes", null);
 
-    updateTemplate(id, attributesData);
-  });
+    switch (process) {
+      case "update":
+        const { attributesData } = data;
+
+        if (checkAttributes === null) {
+          await updateTemplate(id, attributesData);
+        }
+
+        break;
+      case "extract_no_attributes":
+        if (checkAttributes === null) {
+          jobsExtract.push(value);
+        }
+        break;
+      default:
+        console.log("LOL");
+        break;
+    }
+  }
+
+  if (process.includes("extract")) {
+    await file_process.write(jobsExtract, subdomain);
+  }
 
   cli.action.stop();
 };
