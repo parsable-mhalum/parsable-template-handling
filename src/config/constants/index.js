@@ -6,8 +6,8 @@ const file_headers = [
     title: "ID",
   },
   {
-    id: "title",
-    title: "Title",
+    id: "attributes",
+    title: "Attributes",
   },
 ];
 
@@ -38,6 +38,10 @@ const process_prompts = [
         title: "Extract Templates",
         value: "extract",
       },
+      {
+        title: "Restore Previous Attributes",
+        value: "restore",
+      },
     ],
   },
 ];
@@ -60,10 +64,11 @@ const team_prompts = (teamData) => {
   const teamChoices = [];
 
   teamData.forEach((value) => {
-    const { id, name } = value;
+    const { id, name, subdomain } = value;
+
     teamChoices.push({
-      title: name,
-      value: { teamId: id, name },
+      title: `${name} (${subdomain})`,
+      value: { teamId: id, subdomain },
     });
   });
 

@@ -24,7 +24,7 @@ const SELECT_OPTS = {
   includeDrafts: false,
   includeLastModified: false,
   includeAttributes: true,
-  includeRefMap: false
+  includeRefMap: false,
 };
 
 module.exports = {

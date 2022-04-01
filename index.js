@@ -7,7 +7,11 @@ const {
   getTeamId,
   getLocationAttributes,
 } = require("./src/functions/auth");
-const { processData, queryJobTemplates } = require("./src/functions/templates");
+const {
+  processData,
+  queryJobTemplates,
+  restoreAttributes,
+} = require("./src/functions/templates");
 const { version } = require("./package.json");
 
 const {
@@ -21,12 +25,12 @@ const {
 const handler = async () => {
   console.info("Handle Templates in Bulk For Parsable");
   console.info(`***** ver ${version} *****`);
-  // const email = "martin.halum@parsable.com";
-  // const password = "Tidus9908!";
+  const email = "martin.halum@parsable.com";
+  const password = "Tidus9908!";
   let locationData = [];
   let attributesData = [];
-  const auth = await prompts(auth_prompts);
-  const { email, password } = auth;
+  // const auth = await prompts(auth_prompts);
+  // const { email, password } = auth;
 
   const AUTH_TOKEN = await loginUser(email, password);
   const TEAM_DATA = await getTeamId(AUTH_TOKEN);
@@ -35,9 +39,9 @@ const handler = async () => {
 
   const { process } = selected_process;
   const { team } = selected_team;
-  const { teamId, name } = team;
+  const { teamId, subdomain } = team;
 
-  const LOCATION_DATA = await getLocationAttributes(AUTH_TOKEN, teamId);
+  const LOCATION_DATA = await getLocationAttributes(AUTH_TOKEN, teamId); // to-do: add selection for other attributes as well then process them as selected use multi select
   const TEMPLATES_DATA = await queryJobTemplates(teamId);
 
   LOCATION_DATA.forEach((data) => {
@@ -49,7 +53,7 @@ const handler = async () => {
 
   const data = {
     templateData: TEMPLATES_DATA,
-    subdomain: name,
+    subdomain: subdomain,
   };
 
   switch (process) {
@@ -74,6 +78,9 @@ const handler = async () => {
       const { extractType } = select_type;
 
       processData(`${process}_${extractType}`, data);
+      break;
+    case "restore":
+      restoreAttributes(process);
       break;
     default:
       console.log("Others selected");
