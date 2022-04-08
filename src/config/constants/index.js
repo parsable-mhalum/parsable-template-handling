@@ -84,7 +84,35 @@ const team_prompts = (teamData) => {
   return team_prompt;
 };
 
-const location_prompts = (locationData) => {
+const attribute_prompts = (attributeData) => {
+  const attributeChoices = [];
+
+  attributeData.forEach((data) => {
+    const { id, label, values } = data;
+
+    attributeChoices.push({
+      title: label,
+      value: {
+        id: id,
+        label: label,
+        values: values,
+      },
+    });
+  });
+
+  const attribute_prompts = [
+    {
+      type: "select",
+      name: "selectedAttribute",
+      message: "Please select attribute to update:",
+      choices: attributeChoices,
+    },
+  ];
+
+  return attribute_prompts;
+};
+
+const attribute_value_prompts = (locationData) => {
   const locationChoices = [];
 
   locationData.forEach((data) => {
@@ -99,16 +127,16 @@ const location_prompts = (locationData) => {
     });
   });
 
-  const location_prompts = [
+  const attribute_value_prompts = [
     {
       type: "multiselect",
-      name: "selectedLocation",
-      message: "Please select attribute to add:",
+      name: "selectedAttributeValue",
+      message: "Please select value to add:",
       choices: locationChoices,
     },
   ];
 
-  return location_prompts;
+  return attribute_value_prompts;
 };
 
 module.exports = {
@@ -117,5 +145,6 @@ module.exports = {
   process_prompts,
   extract_type,
   team_prompts,
-  location_prompts,
+  attribute_prompts,
+  attribute_value_prompts,
 };

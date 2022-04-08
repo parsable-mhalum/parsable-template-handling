@@ -92,6 +92,49 @@ const queryJobTemplates = async (teamId) => {
   return templates;
 };
 
+const restoreAttributes = async (process, email, password, ATTRIBUTES_DATA) => {
+  await storage.init({
+    dir: "./src/.storage",
+    stringify: JSON.stringify,
+    parse: JSON.parse,
+    encoding: "utf8",
+  });
+
+  const JOBS_ATTRIB = await storage.getItem("JOBS_ATTRIB");
+  const backupData = JSON.parse(JOBS_ATTRIB);
+
+  // console.log(backupData.length);
+
+  for (const index in backupData) {
+    const data = backupData[index];
+    const id = get(data, "id", null);
+    const attributes = get(data, "attributes");
+    const attributeData = attributes === "null" ? [] : JSON.parse(attributes);
+
+    ATTRIBUTES_DATA.forEach((value) => {
+      const { id, label } = value;
+
+      var check = attributeData.find((c) => c.id === id);
+
+      if (check === undefined) {
+        attributeData.push({
+          id: id,
+          label: label,
+          values: [],
+        });
+      }
+    });
+
+    if (index % 50 === 0) {
+      const newToken = await loginUser(email, password);
+      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
+      HEADER[el] = `Authorization: Token ${newToken}`;
+    }
+
+    updateTemplate(id, attributeData, process);
+  }
+};
+
 const processData = async (process, data, email, password) => {
   cli.action.start("Processing Templates");
   const { templateData, subdomain } = data;
@@ -145,48 +188,6 @@ const processData = async (process, data, email, password) => {
   }
 
   cli.action.stop();
-};
-
-const restoreAttributes = async (process, email, password) => {
-  await storage.init({
-    dir: "./src/.storage",
-    stringify: JSON.stringify,
-    parse: JSON.parse,
-    encoding: "utf8",
-  });
-
-  const JOBS_ATTRIB = await storage.getItem("JOBS_ATTRIB");
-  const backupData = JSON.parse(JOBS_ATTRIB);
-
-  // console.log(backupData.length);
-
-  for (const index in backupData) {
-    const data = backupData[index];
-    const id = get(data, "id", null);
-    const attributes = get(data, "attributes");
-    const attributeData =
-      attributes !== "null"
-        ? JSON.parse(attributes)
-        : [{ id: "2a345ade-8ef7-4580-81a9-cfc6e336a25e", values: [] }]; // to-do: make id dynamic
-    var check = attributeData.find(
-      (c) => c.id === "2a345ade-8ef7-4580-81a9-cfc6e336a25e"
-    );
-
-    if (check === undefined) {
-      attributeData.push({
-        id: "2a345ade-8ef7-4580-81a9-cfc6e336a25e",
-        values: [],
-      });
-    }
-
-    if (index % 50 === 0) {
-      const newToken = await loginUser(email, password);
-      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
-      HEADER[el] = `Authorization: Token ${newToken}`;
-    }
-
-    updateTemplate(id, attributeData, process);
-  }
 };
 
 module.exports = {

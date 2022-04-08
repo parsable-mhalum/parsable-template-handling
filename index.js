@@ -5,7 +5,7 @@ const { constants } = require("./src/config");
 const {
   loginUser,
   getTeamId,
-  getLocationAttributes,
+  getTeamAttributes,
 } = require("./src/functions/auth");
 const {
   processData,
@@ -19,7 +19,8 @@ const {
   process_prompts,
   extract_type,
   team_prompts,
-  location_prompts,
+  attribute_prompts,
+  attribute_value_prompts,
 } = constants;
 
 const handler = async () => {
@@ -41,15 +42,8 @@ const handler = async () => {
   const { team } = selected_team;
   const { teamId, subdomain } = team;
 
-  const LOCATION_DATA = await getLocationAttributes(teamId); // to-do: add selection for other attributes as well then process them as selected use multi select
+  const ATTRIBUTES_DATA = await getTeamAttributes(teamId);
   const TEMPLATES_DATA = await queryJobTemplates(teamId);
-
-  LOCATION_DATA.forEach((data) => {
-    const { id, label, values } = data;
-    ATTRIBUTE_ID = id;
-    ATTRIBUTE_LABEL = label;
-    locationData = values;
-  });
 
   const data = {
     templateData: TEMPLATES_DATA,
@@ -58,14 +52,21 @@ const handler = async () => {
 
   switch (process) {
     case "update":
-      const select_location = await prompts(location_prompts(locationData));
-      const { selectedLocation } = select_location;
+      const select_attribute = await prompts(
+        attribute_prompts(ATTRIBUTES_DATA)
+      );
+      const { selectedAttribute } = select_attribute;
 
-      attributesData = [
+      const select_value = await prompts(
+        attribute_value_prompts(selectedAttribute.values)
+      );
+      const { selectedAttributeValue } = select_value;
+
+      const attributesData = [
         {
-          id: ATTRIBUTE_ID,
-          label: ATTRIBUTE_LABEL,
-          values: selectedLocation,
+          id: selectedAttribute.id,
+          label: selectedAttribute.label,
+          values: selectedAttributeValue,
         },
       ];
 
@@ -80,10 +81,7 @@ const handler = async () => {
       processData(`${process}_${extractType}`, data);
       break;
     case "restore":
-      restoreAttributes(process, email, password);
-      break;
-    default:
-      console.log("Others selected");
+      restoreAttributes(process, email, password, ATTRIBUTES_DATA);
       break;
   }
 };
