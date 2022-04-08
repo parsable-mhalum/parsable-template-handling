@@ -26,7 +26,6 @@ const loginUser = async (email, password) => {
   return data.result.success.authToken || undefined;
 };
 
-
 const getTeamId = async (authToken) => {
   cli.action.start("Fetching User Teams");
   const apiUrl = TEAMS_URL;
@@ -47,7 +46,7 @@ const getTeamId = async (authToken) => {
   return success;
 };
 
-const getLocationAttributes = async (authToken, teamId) => {
+const getLocationAttributes = async (teamId) => {
   cli.action.start("Fetching User Attributes");
   const apiUrl = ATTRIBUTES_URL;
   const apiHeader = HEADER;
@@ -68,7 +67,7 @@ const getLocationAttributes = async (authToken, teamId) => {
   for (var ctr = 0; ctr < success.length; ctr++) {
     const { id, label, values } = success[ctr];
 
-    if (label.toUpperCase() === "LOCATION") {
+    if (label.toUpperCase() === "ACCESS") {
       locationData.push({
         id,
         label,

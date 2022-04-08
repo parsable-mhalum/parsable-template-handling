@@ -3,6 +3,8 @@ const storage = require("node-persist");
 const { cli } = require("cli-ux");
 const { get } = require("lodash");
 
+const { loginUser } = require("../auth");
+
 const { api } = require("../../config");
 const { APIFactory } = require("../../api");
 const file_process = require("../../file_process/write");
@@ -15,25 +17,25 @@ const selectOpts = SELECT_OPTS;
 
 const filterTemplates = async (template) => {
   const { title } = template;
-  if (title === "TEST_TEMPLATE_FOR_PARSABLE_SCRIPT") {
-    return template;
-  } else {
-    return null;
-  }
-  // if (title !== "GL_200_HCT_SAMS_PDF Generator Test Copy") {
-  //   if (
-  //     title.includes("[DoNotDelete]") ||
-  //     title.toUpperCase().includes("[DO NOT DELETE]")
-  //   ) {
-  //     if (title.includes("[Jinn]")) {
-  //       return null;
-  //     } else {
-  //       return template;
-  //     }
-  //   } else {
-  //     return template;
-  //   }
+  // if (title === "TEST_TEMPLATE_FOR_PARSABLE_SCRIPT") {
+  //   return template;
+  // } else {
+  //   return null;
   // }
+  if (title !== "GL_200_HCT_SAMS_PDF Generator Test Copy") {
+    if (
+      title.includes("[DoNotDelete]") ||
+      title.toUpperCase().includes("[DO NOT DELETE]")
+    ) {
+      if (title.includes("[Jinn]")) {
+        return null;
+      } else {
+        return template;
+      }
+    } else {
+      return template;
+    }
+  }
 };
 
 const updateTemplate = async (templateId, attributesData, process) => {
@@ -90,7 +92,7 @@ const queryJobTemplates = async (teamId) => {
   return templates;
 };
 
-const processData = async (process, data) => {
+const processData = async (process, data, email, password) => {
   cli.action.start("Processing Templates");
   const { templateData, subdomain } = data;
   let jobsExtract = [];
@@ -101,8 +103,15 @@ const processData = async (process, data) => {
     encoding: "utf8",
   });
 
-  for (const value of templateData) {
+  for (const index in templateData) {
+    const value = templateData[index];
     const checkAttributes = get(value, "attributes", null);
+
+    if (index % 50 === 0) {
+      const newToken = await loginUser(email, password);
+      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
+      HEADER[el] = `Authorization: Token ${newToken}`;
+    }
 
     switch (process) {
       case "update":
@@ -138,7 +147,7 @@ const processData = async (process, data) => {
   cli.action.stop();
 };
 
-const restoreAttributes = async (process) => {
+const restoreAttributes = async (process, email, password) => {
   await storage.init({
     dir: "./src/.storage",
     stringify: JSON.stringify,
@@ -149,13 +158,32 @@ const restoreAttributes = async (process) => {
   const JOBS_ATTRIB = await storage.getItem("JOBS_ATTRIB");
   const backupData = JSON.parse(JOBS_ATTRIB);
 
-  for (const data of backupData) {
+  // console.log(backupData.length);
+
+  for (const index in backupData) {
+    const data = backupData[index];
     const id = get(data, "id", null);
     const attributes = get(data, "attributes");
     const attributeData =
       attributes !== "null"
         ? JSON.parse(attributes)
-        : [{ id: "521e6f43-2473-4d92-9d47-4cc51702c59c", values: [] }]; // to-do: make id dynamic
+        : [{ id: "2a345ade-8ef7-4580-81a9-cfc6e336a25e", values: [] }]; // to-do: make id dynamic
+    var check = attributeData.find(
+      (c) => c.id === "2a345ade-8ef7-4580-81a9-cfc6e336a25e"
+    );
+
+    if (check === undefined) {
+      attributeData.push({
+        id: "2a345ade-8ef7-4580-81a9-cfc6e336a25e",
+        values: [],
+      });
+    }
+
+    if (index % 50 === 0) {
+      const newToken = await loginUser(email, password);
+      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
+      HEADER[el] = `Authorization: Token ${newToken}`;
+    }
 
     updateTemplate(id, attributeData, process);
   }

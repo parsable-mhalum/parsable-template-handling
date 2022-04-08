@@ -41,7 +41,7 @@ const handler = async () => {
   const { team } = selected_team;
   const { teamId, subdomain } = team;
 
-  const LOCATION_DATA = await getLocationAttributes(AUTH_TOKEN, teamId); // to-do: add selection for other attributes as well then process them as selected use multi select
+  const LOCATION_DATA = await getLocationAttributes(teamId); // to-do: add selection for other attributes as well then process them as selected use multi select
   const TEMPLATES_DATA = await queryJobTemplates(teamId);
 
   LOCATION_DATA.forEach((data) => {
@@ -71,7 +71,7 @@ const handler = async () => {
 
       data["attributesData"] = attributesData;
 
-      processData(process, data);
+      processData(process, data, email, password);
       break;
     case "extract":
       const select_type = await prompts(extract_type);
@@ -80,7 +80,7 @@ const handler = async () => {
       processData(`${process}_${extractType}`, data);
       break;
     case "restore":
-      restoreAttributes(process);
+      restoreAttributes(process, email, password);
       break;
     default:
       console.log("Others selected");
