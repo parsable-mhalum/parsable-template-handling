@@ -1,6 +1,6 @@
 {
   "name": "parsable-template-handling",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Template Handling for Parsable",
   "main": "index.js",
   "scripts": {
