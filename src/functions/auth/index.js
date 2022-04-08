@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const { cli } = require("cli-ux");
 const { api } = require("../../config");
 const { APIFactory } = require("../../api");
@@ -67,8 +66,15 @@ const getTeamAttributes = async (teamId) => {
   return success;
 };
 
+const refreshToken = async (email, password) => {
+  const newToken = await loginUser(email, password);
+  const el = HEADER.findIndex((a) => a.includes("Authorization:"));
+  HEADER[el] = `Authorization: Token ${newToken}`;
+};
+
 module.exports = {
   loginUser,
   getTeamId,
   getTeamAttributes,
+  refreshToken,
 };

@@ -3,7 +3,7 @@ const storage = require("node-persist");
 const { cli } = require("cli-ux");
 const { get } = require("lodash");
 
-const { loginUser } = require("../auth");
+const { loginUser, refreshToken } = require("../auth");
 
 const { api } = require("../../config");
 const { APIFactory } = require("../../api");
@@ -17,11 +17,6 @@ const selectOpts = SELECT_OPTS;
 
 const filterTemplates = async (template) => {
   const { title } = template;
-  // if (title === "TEST_TEMPLATE_FOR_PARSABLE_SCRIPT") {
-  //   return template;
-  // } else {
-  //   return null;
-  // }
   if (title !== "GL_200_HCT_SAMS_PDF Generator Test Copy") {
     if (
       title.includes("[DoNotDelete]") ||
@@ -103,8 +98,6 @@ const restoreAttributes = async (process, email, password, ATTRIBUTES_DATA) => {
   const JOBS_ATTRIB = await storage.getItem("JOBS_ATTRIB");
   const backupData = JSON.parse(JOBS_ATTRIB);
 
-  // console.log(backupData.length);
-
   for (const index in backupData) {
     const data = backupData[index];
     const id = get(data, "id", null);
@@ -126,9 +119,7 @@ const restoreAttributes = async (process, email, password, ATTRIBUTES_DATA) => {
     });
 
     if (index % 50 === 0) {
-      const newToken = await loginUser(email, password);
-      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
-      HEADER[el] = `Authorization: Token ${newToken}`;
+      await refreshToken(email, password);
     }
 
     updateTemplate(id, attributeData, process);
@@ -139,6 +130,7 @@ const processData = async (process, data, email, password) => {
   cli.action.start("Processing Templates");
   const { templateData, subdomain } = data;
   let jobsExtract = [];
+
   await storage.init({
     dir: "./src/.storage",
     stringify: JSON.stringify,
@@ -151,9 +143,7 @@ const processData = async (process, data, email, password) => {
     const checkAttributes = get(value, "attributes", null);
 
     if (index % 50 === 0) {
-      const newToken = await loginUser(email, password);
-      const el = HEADER.findIndex((a) => a.includes("Authorization:"));
-      HEADER[el] = `Authorization: Token ${newToken}`;
+      await refreshToken(email, password);
     }
 
     switch (process) {
