@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { Curl, CurlFeature, curly } = require("node-libcurl");
+const { curly } = require("node-libcurl");
 
 const get = async (url, header, apiData) => {
   const { data } = await curly.get(url, {

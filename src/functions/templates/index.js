@@ -3,7 +3,7 @@ const storage = require("node-persist");
 const { cli } = require("cli-ux");
 const { get } = require("lodash");
 
-const { loginUser, refreshToken } = require("../auth");
+const { refreshToken } = require("../auth");
 
 const { api } = require("../../config");
 const { APIFactory } = require("../../api");
@@ -147,7 +147,7 @@ const processData = async (process, data, email, password) => {
     }
 
     switch (process) {
-      case "update":
+      case "update": {
         const { attributesData } = data;
 
         const filteredTemplate = await filterTemplates(value);
@@ -163,11 +163,13 @@ const processData = async (process, data, email, password) => {
 
         id !== null && updateTemplate(id, attributesData, process);
         break;
-      case "extract_no_attributes":
+      }
+      case "extract_no_attributes": {
         if (checkAttributes === null) {
           jobsExtract.push(value);
         }
         break;
+      }
     }
   }
 

@@ -12,7 +12,6 @@ const {
   queryJobTemplates,
   restoreAttributes,
 } = require("./src/functions/templates");
-
 const {
   auth_prompts,
   process_prompts,
@@ -48,7 +47,7 @@ const handler = async () => {
   };
 
   switch (process) {
-    case "update":
+    case "update": {
       const select_attribute = await prompts(
         attribute_prompts(ATTRIBUTES_DATA)
       );
@@ -71,15 +70,18 @@ const handler = async () => {
 
       processData(process, data, email, password);
       break;
-    case "extract":
+    }
+    case "extract": {
       const select_type = await prompts(extract_type);
       const { extractType } = select_type;
 
       processData(`${process}_${extractType}`, data);
       break;
-    case "restore":
+    }
+    case "restore": {
       restoreAttributes(process, email, password, ATTRIBUTES_DATA);
       break;
+    }
   }
 };
 
