@@ -20,6 +20,7 @@
   "dependencies": {
     "@wearableintelligence/parsable-cli": "^1.0.13",
     "cli-ux": "^6.0.8",
+    "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "node-libcurl": "^2.3.4",
     "node-persist": "^3.1.0",

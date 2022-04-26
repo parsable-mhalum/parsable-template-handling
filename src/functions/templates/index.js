@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 const storage = require("node-persist");
+const fs = require("fs");
 const { cli } = require("cli-ux");
 const { get } = require("lodash");
+const csv = require("csv-parser");
 
 const { refreshToken } = require("../auth");
 
@@ -15,23 +17,23 @@ const apiUrl = JOBS_URL;
 const apiHeader = HEADER;
 const selectOpts = SELECT_OPTS;
 
-const filterTemplates = async (template) => {
-  const { title } = template;
-  if (title !== "GL_200_HCT_SAMS_PDF Generator Test Copy") {
-    if (
-      title.includes("[DoNotDelete]") ||
-      title.toUpperCase().includes("[DO NOT DELETE]")
-    ) {
-      if (title.includes("[Jinn]")) {
-        return null;
-      } else {
-        return template;
-      }
-    } else {
-      return template;
-    }
-  }
-};
+// const filterTemplates = async (template) => {
+//   const { title } = template;
+//   if (title !== "GL_200_HCT_SAMS_PDF Generator Test Copy") {
+//     if (
+//       title.includes("[DoNotDelete]") ||
+//       title.toUpperCase().includes("[DO NOT DELETE]")
+//     ) {
+//       if (title.includes("[Jinn]")) {
+//         return null;
+//       } else {
+//         return template;
+//       }
+//     } else {
+//       return template;
+//     }
+//   }
+// };
 
 const updateTemplate = async (templateId, attributesData, process) => {
   cli.action.start(`Executing ${process} attribute`);
@@ -129,6 +131,7 @@ const restoreAttributes = async (process, email, password, ATTRIBUTES_DATA) => {
 const processData = async (process, data, email, password) => {
   cli.action.start("Processing Templates");
   const { templateData, subdomain } = data;
+  const templateIds = [];
   let jobsExtract = [];
 
   await storage.init({
@@ -138,45 +141,59 @@ const processData = async (process, data, email, password) => {
     encoding: "utf8",
   });
 
-  for (const index in templateData) {
-    const value = templateData[index];
-    const checkAttributes = get(value, "attributes", null);
+  switch (process) {
+    case "update":
+      {
+        await fs
+          .createReadStream(`${subdomain}.csv`)
+          .pipe(csv())
+          .on("data", async (row) => {
+            const { ID } = row;
 
-    if (index % 50 === 0) {
-      await refreshToken(email, password);
-    }
+            templateIds.push(ID);
+          })
+          .on("end", async () => {
+            console.log("CSV file successfully processed");
 
-    switch (process) {
-      case "update": {
-        const { attributesData } = data;
+            for (const index in templateData) {
+              const value = templateData[index];
+              const attributesData = get(data, "attributesData", null);
 
-        const filteredTemplate = await filterTemplates(value);
+              const id = get(value, "id", null);
+              const templateAttrib = get(value, "attributes", null);
 
-        const title = get(filteredTemplate, "title", null);
-        const id = get(filteredTemplate, "id", null);
-        const filteredAttrib = get(filteredTemplate, "attributes", null);
-        title !== null &&
-          jobsExtract.push({
-            id: id,
-            attributes: JSON.stringify(filteredAttrib),
+              if (templateIds.includes(id) && id !== null) {
+                if (index % 50 === 0) {
+                  await refreshToken(email, password);
+                }
+
+                jobsExtract.push({
+                  id: id,
+                  attributes: JSON.stringify(templateAttrib),
+                });
+
+                updateTemplate(id, attributesData, process);
+              }
+
+              await storage.setItem("JOBS_ATTRIB", JSON.stringify(jobsExtract));
+            }
           });
-
-        id !== null && updateTemplate(id, attributesData, process);
-        break;
       }
-      case "extract_no_attributes": {
+      break;
+    case "extract_no_attributes": {
+      for (const value of templateData) {
+        const checkAttributes = get(value, "attributes", null);
+
         if (checkAttributes === null) {
           jobsExtract.push(value);
         }
-        break;
       }
+      break;
     }
   }
 
   if (process.includes("extract")) {
     await file_process.write(jobsExtract, subdomain);
-  } else if (process === "update") {
-    await storage.setItem("JOBS_ATTRIB", JSON.stringify(jobsExtract));
   }
 
   cli.action.stop();
